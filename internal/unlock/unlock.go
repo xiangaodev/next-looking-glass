@@ -70,7 +70,7 @@ func Run(ctx context.Context, lang i18n.Lang) (*Result, error) {
 
 	var wg sync.WaitGroup
 	cats := make([]ByCategory, len(allCategories))
-	sem := make(chan struct{}, 30) // max 30 concurrent HTTP calls, matching CLI default
+	sem := make(chan struct{}, 10) // conservative: tls_client may not handle high concurrency well
 
 	for i, c := range allCategories {
 		wg.Add(1)
