@@ -40,13 +40,35 @@
 
 <main class="wrap">
 
-  <section class="meta-strip">
-    <div class="meta-item"><span class="meta-label">{{.T "meta_location"}}</span><span class="meta-value">{{.ServerLocation}}</span></div>
-    <div class="meta-item"><span class="meta-label">{{.T "meta_ipv4"}}</span><span class="meta-value mono">{{.IPv4}}</span></div>
-    {{if .HasIPv6}}
-    <div class="meta-item"><span class="meta-label">{{.T "meta_ipv6"}}</span><span class="meta-value mono">{{.IPv6}}</span></div>
-    {{end}}
-    <div class="meta-item"><span class="meta-label">{{.T "meta_your_ip"}}</span><span class="meta-value mono accent">{{.ClientIP}}</span></div>
+  <section class="meta-strip" id="metaStrip">
+    <!-- Desktop: always-expanded 3-col grid -->
+    <div class="meta-grid">
+      <div class="meta-item"><span class="meta-label">{{.T "meta_location"}}</span><span class="meta-value">{{.ServerLocation}}</span></div>
+      <div class="meta-item"><span class="meta-label">{{.T "meta_ipv4"}}</span><span class="meta-value mono">{{.IPv4}}</span></div>
+      {{if .HasIPv6}}
+      <div class="meta-item"><span class="meta-label">{{.T "meta_ipv6"}}</span><span class="meta-value mono">{{.IPv6}}</span></div>
+      {{end}}
+      <div class="meta-item"><span class="meta-label">{{.T "meta_your_ip"}}</span><span class="meta-value mono accent">{{.ClientIP}}</span></div>
+    </div>
+
+    <!-- Mobile: collapsible summary, tap chevron to expand -->
+    <div class="meta-mobile">
+      <details class="meta-collapsible">
+        <summary class="meta-summary">
+          <span class="meta-summary-label">{{.T "meta_your_ip"}}</span>
+          <span class="meta-summary-value mono accent">{{.ClientIP}}</span>
+          <svg class="meta-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </summary>
+        <div class="meta-items">
+          <div class="meta-item"><span class="meta-label">{{.T "meta_location"}}</span><span class="meta-value">{{.ServerLocation}}</span></div>
+          <div class="meta-item"><span class="meta-label">{{.T "meta_ipv4"}}</span><span class="meta-value mono">{{.IPv4}}</span></div>
+          {{if .HasIPv6}}
+          <div class="meta-item"><span class="meta-label">{{.T "meta_ipv6"}}</span><span class="meta-value mono">{{.IPv6}}</span></div>
+          {{end}}
+          <div class="meta-item"><span class="meta-label">{{.T "meta_your_ip"}}</span><span class="meta-value mono accent">{{.ClientIP}}</span></div>
+        </div>
+      </details>
+    </div>
   </section>
 
   <div class="layout">
