@@ -288,6 +288,13 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 	var curCat *unlockCat
 	var curSvcs []unlockSvc
 
+	// Skip non-category lines: project info, IP details, interactive prompts
+	skipRe := regexp.MustCompile(`^\[ ?[0-9]+\]|项目地址|使用方式|地区：|请选择|检测项目|取消检测|回车确认|检测完毕|当天运行|Made with|已经是最新版本|^\d+\.\d+\.\d+\.\d+$`)
+	// IP info line: "IPv4 地址：..." or "ISP：..."
+	infoRe := regexp.MustCompile(`^(IPv4|IPv6) 地址：|^ISP：|^地区：`)
+	// Progress: "正在测试..."
+	progRe := regexp.MustCompile(`正在测试|^\s*$`) 
+
 	// Category header pattern: [ XXX (IPv4) ] or [ XX ]
 	catRe := regexp.MustCompile(`^\[ (.+?) \(IPv4\) \]|^\[ (.+?) \]`)
 	// Service pattern: Name    STATUS (extra)
@@ -295,7 +302,7 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 
 	for _, line := range strings.Split(raw, "\n") {
 		line = strings.TrimSpace(line)
-		if line == "" {
+		if line == "" || skipRe.MatchString(line) || infoRe.MatchString(line) || progRe.MatchString(line) {
 			continue
 		}
 		// Category header
@@ -335,30 +342,31 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 
 // catI18nKey maps CLI category headers to i18n keys.
 func catI18nKey(name string) string {
+	name = strings.TrimSpace(name)
 	switch {
-	case strings.Contains(name, "Global") || strings.Contains(name, "跨国"):
+	case strings.EqualFold(name, "Globe") || strings.Contains(name, "跨国") || strings.Contains(name, "Global") || strings.Contains(name, "國際"):
 		return "cat_global"
-	case strings.Contains(name, "Taiwan") || strings.Contains(name, "台湾"):
+	case strings.EqualFold(name, "Taiwan") || strings.Contains(name, "台湾") || strings.Contains(name, "台灣"):
 		return "cat_taiwan"
-	case strings.Contains(name, "Hong Kong") || strings.Contains(name, "香港"):
+	case strings.EqualFold(name, "HongKong") || strings.Contains(name, "香港"):
 		return "cat_hongkong"
-	case strings.Contains(name, "Japan") || strings.Contains(name, "日本"):
+	case strings.EqualFold(name, "Japan") || strings.Contains(name, "日本"):
 		return "cat_japan"
-	case strings.Contains(name, "Korea") || strings.Contains(name, "韩国"):
+	case strings.EqualFold(name, "Korea") || strings.Contains(name, "韩国") || strings.Contains(name, "韓國"):
 		return "cat_korea"
-	case strings.Contains(name, "North America") || strings.Contains(name, "北美"):
+	case strings.EqualFold(name, "NorthAmerica") || strings.Contains(name, "北美"):
 		return "cat_na"
-	case strings.Contains(name, "South America") || strings.Contains(name, "南美"):
+	case strings.EqualFold(name, "SouthAmerica") || strings.Contains(name, "南美"):
 		return "cat_sa"
-	case strings.Contains(name, "Europe") || strings.Contains(name, "欧洲"):
+	case strings.EqualFold(name, "Europe") || strings.Contains(name, "欧洲") || strings.Contains(name, "歐洲"):
 		return "cat_eu"
-	case strings.Contains(name, "Africa") || strings.Contains(name, "非洲"):
+	case strings.EqualFold(name, "Africa") || strings.Contains(name, "非洲"):
 		return "cat_africa"
-	case strings.Contains(name, "SouthEast") || strings.Contains(name, "东南亚"):
+	case strings.EqualFold(name, "SouthEastAsia") || strings.Contains(name, "东南亚") || strings.Contains(name, "東南亞"):
 		return "cat_sea"
-	case strings.Contains(name, "Oceania") || strings.Contains(name, "大洋洲"):
+	case strings.EqualFold(name, "Oceania") || strings.Contains(name, "大洋洲"):
 		return "cat_oceania"
-	case strings.Contains(name, "AI") || strings.Contains(name, "ＡＩ"):
+	case strings.EqualFold(name, "AI") || strings.Contains(name, "ＡＩ"):
 		return "cat_ai"
 	}
 	return name
