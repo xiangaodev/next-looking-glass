@@ -70,6 +70,7 @@ func Run(ctx context.Context, lang i18n.Lang) (*Result, error) {
 
 	var wg sync.WaitGroup
 	cats := make([]ByCategory, len(allCategories))
+	sem := make(chan struct{}, 30) // max 30 concurrent HTTP calls, matching CLI default
 
 	for i, c := range allCategories {
 		wg.Add(1)
@@ -83,8 +84,10 @@ func Run(ctx context.Context, lang i18n.Lang) (*Result, error) {
 					continue
 				}
 				inner.Add(1)
-			go func(tt providers.TestItem) {
+				sem <- struct{}{}
+				go func(tt providers.TestItem) {
 				defer func() {
+					<-sem
 					if r := recover(); r != nil {
 						log.Printf("panic in unlock test %q: %v", tt.Name, r)
 					}
