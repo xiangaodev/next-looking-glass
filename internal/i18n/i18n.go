@@ -106,6 +106,7 @@ var zh = map[string]string{
 	// ---------- shell / layout ----------
 	"site_desc":          "Nimbus Looking Glass — ping / traceroute / MTR / host / 下載測速 / 快速回程 / 串流解鎖",
 	"nav_switch_nodes":   "節點切換",
+	"nav_select_tool":    "選擇工具",
 
 	// ---------- meta strip ----------
 	"meta_location":  "節點位置",
@@ -248,6 +249,7 @@ var en = map[string]string{
 	// ---------- shell / layout ----------
 	"site_desc":          "Nimbus Looking Glass — ping / traceroute / MTR / host / speed test / fast trace / unlock",
 	"nav_switch_nodes":   "Switch Node",
+	"nav_select_tool":    "Select Tool",
 
 	// ---------- meta strip ----------
 	"meta_location":  "Location",

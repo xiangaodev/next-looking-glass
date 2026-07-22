@@ -407,15 +407,53 @@ body {
 /* ---------- responsive ---------- */
 
 @media (max-width: 860px) {
-  .layout { grid-template-columns: 1fr; }
-  .sidebar { position: static; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
-  .tool-group { flex-direction: row; align-items: center; flex-shrink: 0; padding: 8px; }
+  /* Mobile: sidebar 转为顶部水平 chips */
+  .layout { grid-template-columns: 1fr; gap: 12px; }
+  .sidebar {
+    position: static;
+    flex-direction: row; overflow-x: auto; gap: 8px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, .86);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+
+  /* tool-group 退化为 inline chip 容器 */
+  .tool-group {
+    flex-direction: row; align-items: center; gap: 6px;
+    padding: 0; background: transparent; border: none;
+    box-shadow: none; flex-shrink: 0;
+  }
   .tool-group-title { display: none; }
-  .tool-btn { white-space: nowrap; }
-  .header-inner { gap: 12px; flex-wrap: wrap; }
+
+  /* tool-btn 改为 pill 样式 chip */
+  .tool-btn {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    font-size: 13px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+  .tool-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: transparent;
+    color: #fff;
+  }
+
+  /* header */
+  .header-inner { gap: 10px; flex-wrap: wrap; }
+  .site-header { position: sticky; top: 0; }
   .node-nav { margin-left: auto; width: 100%; order: 3; }
   .node-select { width: 100%; min-width: 0; }
-  .content { padding: 18px; }
+
+  /* content */
+  .content { padding: 16px; }
   .input-row { flex-direction: column; }
 
   /* Speedtest on mobile */
