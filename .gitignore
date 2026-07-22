@@ -1,0 +1,10 @@
+/bin/
+config.yaml
+deploy/configs/*.yaml
+deploy/production/hosts
+deploy/ansible.cfg
+.DS_Store
+*.swp
+.playwright-cli/
+.zcode/
+node_modules/

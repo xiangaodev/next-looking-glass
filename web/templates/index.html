@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.SiteName}} · Looking Glass</title>
+<meta name="description" content="{{.SiteName}} — ping / traceroute / MTR / host / speed test / fast trace / unlock">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/static/app.css">
+{{if .FaviconSrc -}}
+<link rel="icon" href="{{.FaviconSrc}}">
+{{- else -}}
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%230066cc'/><text x='50' y='68' font-size='58' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>{{.LogoChar}}</text></svg>">
+{{- end}}
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="{{.SiteURL}}" target="_blank" rel="noopener">
+      {{if .LogoSrc -}}
+      <img class="brand-logo" src="{{.LogoSrc}}" alt="{{.SiteName}}">
+      {{- else -}}
+      <span class="brand-mark">{{.LogoChar}}</span>
+      {{- end}}
+      <span class="brand-text">
+        <strong>{{.SiteName}}</strong>
+        <small>Looking Glass</small>
+      </span>
+    </a>
+    <nav class="node-nav" id="nodeNav" aria-label="{{.T "nav_switch_nodes"}}">
+      {{range .Nodes}}
+      <a class="node-chip{{if eq .URL $.CurrentURL}} active{{end}}" href="{{.URL}}" title="{{.URL}}">{{.Name}}</a>
+      {{end}}
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="meta-strip">
+    <div class="meta-item"><span class="meta-label">{{.T "meta_location"}}</span><span class="meta-value">{{.ServerLocation}}</span></div>
+    <div class="meta-item"><span class="meta-label">{{.T "meta_ipv4"}}</span><span class="meta-value mono">{{.IPv4}}</span></div>
+    {{if .HasIPv6}}
+    <div class="meta-item"><span class="meta-label">{{.T "meta_ipv6"}}</span><span class="meta-value mono">{{.IPv6}}</span></div>
+    {{end}}
+    <div class="meta-item"><span class="meta-label">{{.T "meta_your_ip"}}</span><span class="meta-value mono accent">{{.ClientIP}}</span></div>
+  </section>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="tool-group">
+        <div class="tool-group-title">{{.T "tool_group_diag"}}</div>
+        <button class="tool-btn active" data-tool="ping">{{.T "tool_ping"}}</button>
+        <button class="tool-btn" data-tool="traceroute">{{.T "tool_traceroute"}}</button>
+        <button class="tool-btn" data-tool="mtr">{{.T "tool_mtr"}}</button>
+        <button class="tool-btn" data-tool="host">{{.T "tool_host"}}</button>
+      </div>
+      {{if .HasIPv6}}
+      <div class="tool-group">
+        <div class="tool-group-title">{{.T "tool_group_ipv6"}}</div>
+        <button class="tool-btn" data-tool="ping6">{{.T "tool_ping6"}}</button>
+        <button class="tool-btn" data-tool="traceroute6">{{.T "tool_traceroute6"}}</button>
+        <button class="tool-btn" data-tool="mtr6">{{.T "tool_mtr6"}}</button>
+      </div>
+      {{end}}
+      <div class="tool-group">
+        <div class="tool-group-title">{{.T "tool_group_speed"}}</div>
+        <button class="tool-btn" data-tool="speedtest">{{.T "tool_speedtest"}}</button>
+        <button class="tool-btn" data-tool="fasttrace">{{.T "tool_fasttrace"}}</button>
+        <button class="tool-btn" data-tool="unlock">{{.T "tool_unlock"}}</button>
+      </div>
+    </aside>
+
+    <section class="content">
+
+      <div id="diagPanel">
+        <form id="diagForm" autocomplete="off">
+          <label class="input-label" for="target">{{.T "label_target"}}</label>
+          <div class="input-row">
+            <input id="target" name="target" type="text" inputmode="url"
+                   placeholder="{{.T "placeholder_host"}}" spellcheck="false" required>
+            <button type="submit" id="runBtn" class="btn-primary">{{.T "btn_run"}}</button>
+          </div>
+          <p class="input-hint" id="cmdHint"></p>
+        </form>
+      </div>
+
+      <!-- Trace result table (traceroute JSON) -->
+      <div id="tracePanel" class="hidden">
+        <div class="trace-summary" id="traceSummary"></div>
+        <div class="trace-table-wrap">
+          <table class="trace-table" id="traceTable">
+            <thead id="traceHead"><tr><th>{{.T "th_hop"}}</th><th>{{.T "th_ip"}}</th><th>{{.T "th_rtt"}}</th><th>{{.T "th_location"}}</th><th>{{.T "th_asn"}}</th></tr></thead>
+            <tbody id="traceBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Fast Trace panel -->
+      <div id="fasttracePanel" class="hidden">
+        <h3 class="panel-title">{{.T "fasttrace_title"}}</h3>
+        <p class="panel-desc">{{.T "ft_powered_by"}} <a href="https://github.com/nxtrace/NTrace-core" target="_blank" rel="noopener">nexttrace</a> · {{.T "fasttrace_desc"}}</p>
+
+        <div class="ft-tabs" id="ftTabs">
+          <button class="ft-tab active" data-idx="0" id="ftTab0">—</button>
+          <button class="ft-tab" data-idx="1" id="ftTab1">—</button>
+          <button class="ft-tab" data-idx="2" id="ftTab2">—</button>
+        </div>
+
+        <div class="trace-table-wrap" style="margin-top: 0;">
+          <table class="trace-table" id="ftTable">
+            <thead id="ftHead"><tr><th>{{.T "th_hop"}}</th><th>{{.T "th_ip"}}</th><th>{{.T "th_rtt"}}</th><th>{{.T "th_location"}}</th><th>{{.T "th_asn"}}</th></tr></thead>
+            <tbody id="ftBody"><tr><td colspan="5" class="trace-timeout">{{.T "fasttrace_empty"}}</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="ft-footer">
+          <span class="ft-elapsed" id="ftElapsed"></span>
+          <button id="ftBtn" class="btn-primary">{{.T "btn_fasttrace"}}</button>
+        </div>
+      </div>
+
+      <!-- Unlock panel -->
+      <div id="unlockPanel" class="hidden">
+        <h3 class="panel-title">{{.T "unlock_title"}}</h3>
+        <p class="panel-desc">{{.T "ft_powered_by"}} <a href="https://github.com/HsukqiLee/MediaUnlockTest" target="_blank" rel="noopener">MediaUnlockTest</a> · {{.T "unlock_desc"}}</p>
+        <button id="unlockBtn" class="btn-primary">{{.T "btn_unlock"}}</button>
+        <div class="unlock-grid" id="unlockGrid"></div>
+      </div>
+
+      <!-- Speedtest panel -->
+      <div id="speedtestPanel" class="hidden">
+        <div class="gauge-wrap">
+          <div class="gauge" id="gauge">
+            <svg viewBox="0 0 240 240" class="gauge-svg">
+              <circle class="gauge-track" cx="120" cy="120" r="100"/>
+              <circle class="gauge-fill" id="gaugeArc" cx="120" cy="120" r="100"/>
+            </svg>
+            <div class="gauge-center">
+              <div class="gauge-value" id="gaugeValue">--</div>
+              <div class="gauge-unit">Mbps</div>
+              <div class="gauge-phase" id="gaugePhase">{{.T "speedtest_ready"}}</div>
+            </div>
+          </div>
+          <button id="speedBtn" class="btn-primary gauge-btn">{{.T "btn_speedtest"}}</button>
+        </div>
+
+        <div class="speed-stats" id="speedStats">
+          <div class="stat-card">
+            <div class="stat-icon down">↓</div>
+            <div class="stat-body"><span class="stat-label">{{.T "stat_download"}}</span><span class="stat-value" id="statDown">--</span><span class="stat-unit">Mbps</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon up">↑</div>
+            <div class="stat-body"><span class="stat-label">{{.T "stat_upload"}}</span><span class="stat-value" id="statUp">--</span><span class="stat-unit">Mbps</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon ping">~</div>
+            <div class="stat-body"><span class="stat-label">{{.T "stat_ping"}}</span><span class="stat-value" id="statPing">--</span><span class="stat-unit">ms</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon jitter">≋</div>
+            <div class="stat-body"><span class="stat-label">{{.T "stat_jitter"}}</span><span class="stat-value" id="statJitter">--</span><span class="stat-unit">ms</span></div>
+          </div>
+        </div>
+
+        <p class="speed-note" id="speedNote">{{.T "speedtest_hint"}}</p>
+      </div>
+
+      <!-- Terminal output -->
+      <div id="terminalWrap" class="terminal-wrap hidden">
+        <div class="terminal-bar">
+          <span class="t-dot red"></span><span class="t-dot yellow"></span><span class="t-dot green"></span>
+          <span class="terminal-title" id="terminalTitle">output</span>
+          <button id="stopBtn" class="btn-ghost hidden">{{.T "btn_stop"}}</button>
+        </div>
+        <pre id="terminal" class="terminal" aria-live="polite"></pre>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p>&copy; {{.Year}} <a href="{{.SiteURL}}" target="_blank" rel="noopener">{{.SiteName}}</a> · Next Looking Glass</p>
+    <p class="credits">{{.T "credits_text"}} · <a href="https://github.com/xiangaodev/next-looking-glass" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+</main>
+
+<script>
+window.__I18N__ = {{.I18NJS}};
+</script>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

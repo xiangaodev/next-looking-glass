@@ -1,0 +1,157 @@
+# Next Looking Glass — Ansible 部署 playbook
+# 在旧 PHP 版 VPS 上并行部署新 Go 版本，Apache 反代到 :8080。
+# 可回滚：把 ProxyPass 注释掉就恢复旧 PHP 版。
+#
+# 用法:
+#   cd deploy
+#   make release      # 先在本机编译 linux-amd64 二进制
+#   ansible-playbook -i production/hosts site.yml
+
+- name: Deploy Next Looking Glass (Go + Apache reverse proxy)
+  hosts: lookingglass
+  become: true
+  vars:
+    nt_version: "v1.7.1"
+    lg_binary: "next-looking-glass-linux-amd64"
+    lg_bin: "/usr/local/bin/next-looking-glass"
+    lg_config_dir: "/etc/next-looking-glass"
+    lg_service: "next-looking-glass"
+    lg_port: "8080"
+
+  tasks:
+    # ---- 系统依赖 ----
+    - name: Install system packages (Debian/Ubuntu)
+      apt:
+        name:
+          - iputils-ping
+          - dnsutils
+          - curl
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Install system packages (RedHat)
+      package:
+        name:
+          - iputils
+          - bind-utils
+          - curl
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    # ---- nexttrace ----
+    - name: Detect architecture for nexttrace
+      set_fact:
+        nt_arch: "{{ 'arm64' if ansible_architecture in ['aarch64','arm64'] else 'amd64' }}"
+
+    - name: Download nexttrace
+      get_url:
+        url: "https://github.com/nxtrace/NTrace-core/releases/download/{{ nt_version }}/nexttrace_linux_{{ nt_arch }}"
+        dest: "/usr/local/bin/nexttrace"
+        mode: "0755"
+
+    # ---- Go 二进制 ----
+    - name: Create config directory
+      file:
+        path: "{{ lg_config_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy looking-glass binary
+      copy:
+        src: "../bin/{{ lg_binary }}"
+        dest: "{{ lg_bin }}"
+        mode: "0755"
+      notify: restart looking-glass
+
+    - name: Copy per-node config
+      copy:
+        src: "configs/{{ inventory_hostname }}.yaml"
+        dest: "{{ lg_config_dir }}/config.yaml"
+        mode: "0644"
+      notify: restart looking-glass
+
+    # ---- systemd ----
+    - name: Install systemd unit
+      copy:
+        dest: "/etc/systemd/system/{{ lg_service }}.service"
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Next Looking Glass
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          Type=simple
+          ExecStart={{ lg_bin }} -config {{ lg_config_dir }}/config.yaml
+          Restart=always
+          RestartSec=3
+          AmbientCapabilities=CAP_NET_RAW
+          CapabilityBoundingSet=CAP_NET_RAW
+          NoNewPrivileges=true
+
+          [Install]
+          WantedBy=multi-user.target
+      register: lg_unit
+
+    - name: systemd daemon-reload
+      systemd:
+        daemon_reload: true
+      when: lg_unit.changed
+
+    - name: Start looking-glass
+      systemd:
+        name: "{{ lg_service }}"
+        enabled: true
+        state: started
+
+    # ---- Apache 反代 ----
+    - name: Enable Apache proxy and headers modules (Debian/Ubuntu)
+      command: "a2enmod proxy proxy_http headers"
+      when: ansible_os_family == "Debian"
+      notify: restart apache
+      ignore_errors: true
+
+    - name: Apache reverse-proxy config
+      copy:
+        dest: "/etc/apache2/sites-available/lookingglass-proxy.conf"
+        mode: "0644"
+        content: |
+          ProxyPreserveHost On
+          ProxyRequests Off
+          ProxyPass / http://127.0.0.1:{{ lg_port }}/
+          ProxyPassReverse / http://127.0.0.1:{{ lg_port }}/
+      when: ansible_os_family == "Debian"
+      register: proxy_conf
+
+    - name: Enable proxy site (Debian)
+      command: "a2ensite lookingglass-proxy"
+      when: proxy_conf.changed and ansible_os_family == "Debian"
+      notify: restart apache
+      ignore_errors: true
+
+    # ---- 验证 ----
+    - name: Wait for Go backend
+      wait_for:
+        port: "{{ lg_port }}"
+        timeout: 10
+
+    - name: Curl test through proxy
+      uri:
+        url: "http://127.0.0.1:{{ lg_port }}/api/info"
+        return_content: true
+      register: test_resp
+      failed_when: "'server_location' not in test_resp.content"
+
+  handlers:
+    - name: restart looking-glass
+      systemd:
+        name: "{{ lg_service }}"
+        state: restarted
+
+    - name: restart apache
+      systemd:
+        name: apache2
+        state: restarted
+      when: ansible_os_family == "Debian"

@@ -1,0 +1,7 @@
+.git
+*.md
+bin/
+*.test
+.DS_Store
+config.local.yaml
+node_modules

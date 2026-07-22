@@ -1,0 +1,44 @@
+# Next Looking Glass configuration
+# Copy to config.yaml and adjust for each node.
+
+listen: ":8080"
+
+site_name: "Nimbus 筋斗雲"
+site_url: "https://www.nimbus.com.tw"
+server_location: "TW - Global"
+
+ipv4: "203.0.113.1"     # TODO: set this node's public IPv4
+ipv6: ""
+
+# Branding
+logo_text: "N"
+logo_url: ""
+logo_base64: ""          # raw base64-encoded image
+favicon_url: ""
+favicon_base64: ""       # raw base64-encoded favicon
+
+default_lang: "zh"
+
+test_files: ["10MB", "100MB", "1GB"]
+
+nodes:
+  - { name: "TW - Global",                url: "https://lg-tw-g.nimbus.com.tw" }
+  - { name: "TW - China Direct",          url: "https://lg-tw-cnd.nimbus.com.tw" }
+  - { name: "TW - Global AntiDDoS",       url: "https://lg-tw-g-antiddos.nimbus.com.tw" }
+  - { name: "HK - Global",                url: "https://lg-hk-g.nimbus.com.tw" }
+  - { name: "HK - China Direct",          url: "https://lg-hk-cnd.nimbus.com.tw" }
+  - { name: "HK - China Direct Premium",  url: "https://lg-hk-cndp.nimbus.com.tw" }
+
+speedtest_nodes:
+  - { name: "CacheFly (Global CDN)",   url: "https://cachefly.cachefly.net/100mb.test" }
+
+fast_trace_targets:
+  - { name: "上海電信", host: "ipv4.sha-4134.endpoint.nxtrace.org" }
+  - { name: "北京聯通", host: "ipv4.pek-4837.endpoint.nxtrace.org" }
+  - { name: "廣州移動", host: "ipv4.can-9808.endpoint.nxtrace.org" }
+
+rate_limit:
+  light_per_hour: 30
+  heavy_per_hour: 3
+
+trust_proxy: true

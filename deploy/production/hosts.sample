@@ -1,0 +1,10 @@
+[lookingglass]
+lg-tw-g.nimbus.com.tw          ansible_user=sysop
+lg-tw-cnd.nimbus.com.tw        ansible_user=sysop
+lg-tw-g-antiddos.nimbus.com.tw ansible_user=root
+lg-hk-g.nimbus.com.tw          ansible_user=sysop
+lg-hk-cnd.nimbus.com.tw        ansible_user=root
+lg-hk-cndp.nimbus.com.tw       ansible_user=sysop
+
+[lookingglass:vars]
+ansible_python_interpreter=/usr/bin/python3
