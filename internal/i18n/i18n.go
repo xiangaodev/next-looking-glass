@@ -164,6 +164,7 @@ var zh = map[string]string{
 	// ---------- unlock ----------
 	"unlock_title": "串流媒體解鎖檢測",
 	"unlock_desc":  "檢測此節點對主流串流平台的地區解鎖狀態（Netflix / YouTube / Disney+ / ChatGPT 等）。全程約 30–60 秒。",
+	"unlock_disclaimer": "檢測結果僅供參考，實際情況可能因 IP 變動、平台政策等因素有所不同。",
 	"btn_unlock":   "開始檢測",
 
 	// ---------- terminal ----------
@@ -305,6 +306,7 @@ var en = map[string]string{
 	// ---------- unlock ----------
 	"unlock_title": "Streaming Unlock Test",
 	"unlock_desc":  "Checks region-unlock status for major streaming platforms (Netflix / YouTube / Disney+ / ChatGPT etc.). Takes ~30–60 seconds.",
+	"unlock_disclaimer": "Results are for reference only. Actual availability may vary due to IP changes, platform policies, etc.",
 	"btn_unlock":   "Start Test",
 
 	// ---------- terminal ----------
