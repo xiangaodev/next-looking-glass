@@ -29,9 +29,11 @@
       </span>
     </a>
     <nav class="node-nav" id="nodeNav" aria-label="{{.T "nav_switch_nodes"}}">
-      {{range .Nodes}}
-      <a class="node-chip{{if eq .URL $.CurrentURL}} active{{end}}" href="{{.URL}}" title="{{.URL}}">{{.Name}}</a>
-      {{end}}
+      <select class="node-select" id="nodeSelect">
+        {{range .Nodes}}
+        <option value="{{.URL}}"{{if eq .URL $.CurrentURL}} selected{{end}}>{{.Name}}</option>
+        {{end}}
+      </select>
     </nav>
   </div>
 </header>

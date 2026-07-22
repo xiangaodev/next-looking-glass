@@ -42,6 +42,11 @@
 
   const TRACE_CMDS = new Set(["traceroute", "traceroute6", "mtr", "mtr6"]);
 
+  /* node navigation */
+  $("#nodeSelect").addEventListener("change", (e) => {
+    if (e.target.value) location.href = e.target.value;
+  });
+
   /* ---------- tool switching ---------- */
 
   $$(".tool-btn").forEach((btn) => {
