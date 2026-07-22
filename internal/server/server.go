@@ -12,6 +12,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,7 +21,6 @@ import (
 	lgexec "github.com/xiangaodev/next-looking-glass/internal/exec"
 	"github.com/xiangaodev/next-looking-glass/internal/i18n"
 	"github.com/xiangaodev/next-looking-glass/internal/ratelimit"
-	"github.com/xiangaodev/next-looking-glass/internal/unlock"
 )
 
 // Server is the HTTP front end.
@@ -266,6 +267,118 @@ func sseEscape(s string) string {
 	return strings.ReplaceAll(s, "\n", "\\n")
 }
 
+// parseUnlockCLI parses the MediaUnlockTest CLI text output into structured JSON.
+func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
+	// Strip ANSI, progress bars, headers.
+	raw = regexp.MustCompile(`\x1b\[[0-9;]*m`).ReplaceAllString(raw, "")
+	raw = regexp.MustCompile(`\r[^\n]*\r`).ReplaceAllString(raw, "")
+
+	type service struct {
+		Name   string `json:"name"`
+		Result string `json:"result"`
+		Region string `json:"region"`
+		Info   string `json:"info"`
+	}
+	type category struct {
+		Name     string    `json:"category"`
+		Services []service `json:"services"`
+	}
+
+	var cats []unlockCat
+	var curCat *unlockCat
+	var curSvcs []unlockSvc
+
+	// Category header pattern: [ XXX (IPv4) ] or [ XX ]
+	catRe := regexp.MustCompile(`^\[ (.+?) \(IPv4\) \]|^\[ (.+?) \]`)
+	// Service pattern: Name    STATUS (extra)
+	svcRe := regexp.MustCompile(`^(.{3,50}?)\s{2,}(YES|NO|Banned|ERR|Failed|Restricted|Unexpected)\b\s*(.*)`)
+
+	for _, line := range strings.Split(raw, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		// Category header
+		if m := catRe.FindStringSubmatch(line); m != nil {
+			if curCat != nil {
+				curCat.Services = curSvcs
+				cats = append(cats, *curCat)
+			}
+			name := m[1]
+			if name == "" {
+				name = m[2]
+			}
+			curCat = &unlockCat{Name: i18n.T(lang, catI18nKey(name))}
+			curSvcs = nil
+			continue
+		}
+		// Service line
+		if m := svcRe.FindStringSubmatch(line); m != nil {
+			name := strings.TrimSpace(m[1])
+			status := m[2]
+			extra := strings.TrimSpace(m[3])
+			region := ""
+			// Extract region from "Region: XX" or "(Region: XX)"
+			if r := regexp.MustCompile(`Region:\s*(\S+)`).FindStringSubmatch(extra); r != nil {
+				region = r[1]
+			}
+			curSvcs = append(curSvcs, unlockSvc{Name: name, Result: status, Region: region, Info: extra})
+		}
+	}
+	if curCat != nil {
+		curCat.Services = curSvcs
+		cats = append(cats, *curCat)
+	}
+
+	return &unlockCLIResult{Categories: cats}
+}
+
+// catI18nKey maps CLI category headers to i18n keys.
+func catI18nKey(name string) string {
+	switch {
+	case strings.Contains(name, "Global") || strings.Contains(name, "跨国"):
+		return "cat_global"
+	case strings.Contains(name, "Taiwan") || strings.Contains(name, "台湾"):
+		return "cat_taiwan"
+	case strings.Contains(name, "Hong Kong") || strings.Contains(name, "香港"):
+		return "cat_hongkong"
+	case strings.Contains(name, "Japan") || strings.Contains(name, "日本"):
+		return "cat_japan"
+	case strings.Contains(name, "Korea") || strings.Contains(name, "韩国"):
+		return "cat_korea"
+	case strings.Contains(name, "North America") || strings.Contains(name, "北美"):
+		return "cat_na"
+	case strings.Contains(name, "South America") || strings.Contains(name, "南美"):
+		return "cat_sa"
+	case strings.Contains(name, "Europe") || strings.Contains(name, "欧洲"):
+		return "cat_eu"
+	case strings.Contains(name, "Africa") || strings.Contains(name, "非洲"):
+		return "cat_africa"
+	case strings.Contains(name, "SouthEast") || strings.Contains(name, "东南亚"):
+		return "cat_sea"
+	case strings.Contains(name, "Oceania") || strings.Contains(name, "大洋洲"):
+		return "cat_oceania"
+	case strings.Contains(name, "AI") || strings.Contains(name, "ＡＩ"):
+		return "cat_ai"
+	}
+	return name
+}
+
+
+type unlockSvc struct {
+	Name   string `json:"name"`
+	Result string `json:"result"`
+	Region string `json:"region"`
+	Info   string `json:"info"`
+}
+type unlockCat struct {
+	Name     string      `json:"category"`
+	Services []unlockSvc `json:"services"`
+}
+type unlockCLIResult struct {
+	Categories []unlockCat `json:"categories"`
+}
+
 // handleFastTrace runs nexttrace --json against each configured target and
 // streams results as SSE. Events:
 //
@@ -368,8 +481,8 @@ func (s *Server) runTraceJSON(ctx context.Context, host string) ([]byte, error) 
 		return nil, fmt.Errorf("no JSON output from nexttrace")
 }
 
-// handleUnlock runs MediaUnlockTest (as a Go library, not a subprocess) and
-// returns structured JSON with all streaming-service region-check results.
+// handleUnlock runs the MediaUnlockTest CLI binary and returns parsed JSON.
+// Shelling out guarantees 100% identical results to running the CLI directly.
 func (s *Server) handleUnlock(w http.ResponseWriter, r *http.Request) {
 	ip := s.clientIP(r)
 	ok, wait := s.lim.Allow(ip, ratelimit.Light)
@@ -387,12 +500,15 @@ func (s *Server) handleUnlock(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 120*time.Second)
 	defer cancel()
 
-	result, err := unlock.Run(ctx, i18n.DetectLang(r, i18n.Lang(s.cfg.DefaultLang)))
-	if err != nil {
+	cmd := exec.CommandContext(ctx, "/usr/local/bin/unlock-test")
+	cmd.Stdin = strings.NewReader("\n") // select all regions
+	out, err := cmd.Output()
+	if err != nil && len(out) == 0 {
 		http.Error(w, "Unlock test failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	result := parseUnlockCLI(string(out), i18n.DetectLang(r, i18n.Lang(s.cfg.DefaultLang)))
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_ = json.NewEncoder(w).Encode(result)
 }
