@@ -329,7 +329,7 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 			extra := strings.TrimSpace(m[3])
 			region := ""
 			// Extract region from "Region: XX" or "(Region: XX)"
-			if r := regexp.MustCompile(`Region:\s*(\S+)`).FindStringSubmatch(extra); r != nil {
+			if r := regexp.MustCompile(`Region:\s*([\w-]+)`).FindStringSubmatch(extra); r != nil {
 				region = r[1]
 			}
 			curSvcs = append(curSvcs, unlockSvc{Name: name, Result: status, Region: region, Info: extra})
