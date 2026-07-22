@@ -269,9 +269,12 @@ func sseEscape(s string) string {
 
 // parseUnlockCLI parses the MediaUnlockTest CLI text output into structured JSON.
 func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
-	// Strip ANSI, progress bars, headers.
+	// Strip ANSI, normalize line endings.
 	raw = regexp.MustCompile(`\x1b\[[0-9;]*m`).ReplaceAllString(raw, "")
-	raw = regexp.MustCompile(`\r[^\n]*\r`).ReplaceAllString(raw, "")
+	raw = strings.ReplaceAll(raw, "\r\n", "\n")
+	raw = strings.ReplaceAll(raw, "\r", "\n")
+	// Remove progress bar lines (they contain no useful info after ANSI stripped).
+	raw = regexp.MustCompile(`(?m)^.*\d+%\s*\[.*\].*$`).ReplaceAllString(raw, "")
 
 	type service struct {
 		Name   string `json:"name"`
@@ -286,7 +289,7 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 
 	var cats []unlockCat
 	var curCat *unlockCat
-	var curSvcs []unlockSvc
+		var curSvcs = make([]unlockSvc, 0)
 
 	// Skip non-category lines: project info, IP details, interactive prompts
 	skipRe := regexp.MustCompile(`^\[ ?[0-9]+\]|项目地址|使用方式|地区：|请选择|检测项目|取消检测|回车确认|检测完毕|当天运行|Made with|已经是最新版本|^\d+\.\d+\.\d+\.\d+$`)
@@ -316,7 +319,7 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 				name = m[2]
 			}
 			curCat = &unlockCat{Name: i18n.T(lang, catI18nKey(name))}
-			curSvcs = nil
+			curSvcs = make([]unlockSvc, 0)
 			continue
 		}
 		// Service line
