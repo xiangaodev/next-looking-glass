@@ -95,7 +95,6 @@ lg-tw-g.nimbus.com.tw {
 | `GET /` | 首頁 |
 | `GET /api/info` | 節點資訊 JSON |
 | `GET /api/diag?cmd=ping&target=1.1.1.1` | 流式診斷輸出 |
-| `GET /api/bench` | SSE 體檢事件流 |
 | `GET /download/{10mb,100mb,1gb}` | 隨機位元組測速檔 |
 
 ## 授權

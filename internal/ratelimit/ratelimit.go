@@ -15,7 +15,7 @@ type Kind int
 
 const (
 	Light Kind = iota // ping / traceroute / mtr / host
-	Heavy             // bench
+	Heavy             // speedtest
 )
 
 type bucket struct {

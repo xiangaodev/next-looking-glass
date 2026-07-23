@@ -16,7 +16,8 @@ type Node struct {
 	URL  string `yaml:"url"`
 }
 
-// SpeedtestNode is a remote HTTP endpoint used by the bench download test.
+// SpeedtestNode is a remote HTTP endpoint that can serve a download
+// payload for distributed speed tests.
 type SpeedtestNode struct {
 	Name string `yaml:"name"` // e.g. "Taipei, TW"
 	URL  string `yaml:"url"`  // e.g. "https://speedtest.tpe.example.com/100mb.test"
@@ -32,7 +33,7 @@ type FastTraceTarget struct {
 // RateLimitConfig controls per-IP token buckets.
 type RateLimitConfig struct {
 	LightPerHour int `yaml:"light_per_hour"` // ping/traceroute/mtr/host
-	HeavyPerHour int `yaml:"heavy_per_hour"` // bench
+	HeavyPerHour int `yaml:"heavy_per_hour"` // speedtest
 }
 
 // Config is the root YAML configuration.
@@ -49,10 +50,10 @@ type Config struct {
 	FastTraceTargets []FastTraceTarget `yaml:"fast_trace_targets"`
 	RateLimit        RateLimitConfig   `yaml:"rate_limit"`
 	TrustProxy       bool              `yaml:"trust_proxy"`
-	DefaultLang      string            `yaml:"default_lang"` // "zh" or "en", default "zh"
-	LogoText         string            `yaml:"logo_text"`    // text in brand-mark, default first char of site_name
-	LogoURL          string            `yaml:"logo_url"`     // if set, replaces brand-mark with <img>
-	LogoBase64       string            `yaml:"logo_base64"`  // raw base64 image (derives data: URI)
+	DefaultLang      string            `yaml:"default_lang"`   // "zh" or "en", default "zh"
+	LogoText         string            `yaml:"logo_text"`      // text in brand-mark, default first char of site_name
+	LogoURL          string            `yaml:"logo_url"`       // if set, replaces brand-mark with <img>
+	LogoBase64       string            `yaml:"logo_base64"`    // raw base64 image (derives data: URI)
 	FaviconURL       string            `yaml:"favicon_url"`    // if set, replaces auto-generated SVG favicon
 	FaviconBase64    string            `yaml:"favicon_base64"` // raw base64 favicon image
 }
@@ -85,9 +86,12 @@ func (c *Config) LogoSrc() template.URL {
 		s := strings.TrimSpace(c.LogoBase64)
 		if len(s) > 20 {
 			switch {
-			case strings.HasPrefix(s, "/9j/"):      mime = "image/jpeg"
-			case strings.HasPrefix(s, "R0lGOD"):    mime = "image/gif"
-			case strings.HasPrefix(s, "PHN2Zy"), strings.HasPrefix(s, "PD94bW"): mime = "image/svg+xml"
+			case strings.HasPrefix(s, "/9j/"):
+				mime = "image/jpeg"
+			case strings.HasPrefix(s, "R0lGOD"):
+				mime = "image/gif"
+			case strings.HasPrefix(s, "PHN2Zy"), strings.HasPrefix(s, "PD94bW"):
+				mime = "image/svg+xml"
 			}
 		}
 		return template.URL("data:" + mime + ";base64," + s)
@@ -105,9 +109,12 @@ func (c *Config) FaviconSrc() template.URL {
 		s := strings.TrimSpace(c.FaviconBase64)
 		if len(s) > 20 {
 			switch {
-			case strings.HasPrefix(s, "/9j/"):      mime = "image/jpeg"
-			case strings.HasPrefix(s, "R0lGOD"):    mime = "image/gif"
-			case strings.HasPrefix(s, "PHN2Zy"), strings.HasPrefix(s, "PD94bW"): mime = "image/svg+xml"
+			case strings.HasPrefix(s, "/9j/"):
+				mime = "image/jpeg"
+			case strings.HasPrefix(s, "R0lGOD"):
+				mime = "image/gif"
+			case strings.HasPrefix(s, "PHN2Zy"), strings.HasPrefix(s, "PD94bW"):
+				mime = "image/svg+xml"
 			}
 		}
 		return template.URL("data:" + mime + ";base64," + s)

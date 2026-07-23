@@ -184,7 +184,6 @@ body {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff; box-shadow: 0 4px 12px rgba(0, 102, 204, .3);
 }
-.tool-bench.active { background: linear-gradient(135deg, var(--accent), #cc5500); box-shadow: 0 4px 12px rgba(255, 107, 0, .3); }
 
 /* ---------- content ---------- */
 
