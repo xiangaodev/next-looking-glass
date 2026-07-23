@@ -12,7 +12,7 @@ nodes=(
   "lg-hk-g.nimbus.com.tw:HK - Global"
   "lg-hk-cnd.nimbus.com.tw:HK - China Direct"
   "lg-hk-cndp.nimbus.com.tw:HK - China Direct Premium"
-  "lg-hk-g-antiddos.nimbus.com.tw:HK - Global AntiDDoS"
+  "lg-px-cd.nimbus.com.tw:Proxy - China Direct"
 )
 
 for node in "${nodes[@]}"; do
