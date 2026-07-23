@@ -45,7 +45,32 @@ func New(cfg *config.Config, tpl *template.Template, staticFS fs.FS) *Server {
 	return s
 }
 
+// validToolSlugs lists every tool identifier that has a public route at
+// /tools/{slug}. The frontend uses the same set to validate pathnames.
+// Keep this in sync with the sidebar buttons in web/templates/index.html.
+var validToolSlugs = []string{
+	"ping",
+	"traceroute",
+	"mtr",
+	"host",
+	"ping6",
+	"traceroute6",
+	"mtr6",
+	"speedtest",
+	"fasttrace",
+	"unlock",
+}
+
 func (s *Server) routes(staticFS fs.FS) {
+	// Per-tool routes are registered before "/" so http.ServeMux resolves
+	// them via its longest-prefix match. The trailing "/" handler then
+	// catches everything else (including the bare homepage).
+	for _, slug := range validToolSlugs {
+		slug := slug
+		s.mux.HandleFunc("/tools/"+slug, s.withSecurity(func(w http.ResponseWriter, r *http.Request) {
+			s.handleTool(w, r, slug)
+		}))
+	}
 	s.mux.HandleFunc("/", s.withSecurity(s.handleIndex))
 	s.mux.HandleFunc("/api/info", s.withSecurity(s.handleInfo))
 	s.mux.HandleFunc("/api/diag", s.withSecurity(s.handleDiag))
@@ -133,6 +158,10 @@ type pageData struct {
 	LogoSrc        template.URL
 	FaviconSrc     template.URL
 	I18N           map[string]string
+	// InitialTool is the tool that should be active on first render.
+	// The frontend reads it via data-initial-tool and switches the panel
+	// accordingly. Empty string means "use the default (Ping)".
+	InitialTool string
 }
 
 // T looks up a translation key in the page's language map.
@@ -154,28 +183,58 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-		lang := i18n.DetectLang(r, i18n.Lang(s.cfg.DefaultLang))
-		d := pageData{
-			SiteName:       s.cfg.SiteName,
-			SiteURL:        s.cfg.SiteURL,
-			ServerLocation: s.cfg.ServerLocation,
-			IPv4:           s.cfg.IPv4,
-			IPv6:           s.cfg.IPv6,
-			Nodes:          s.cfg.Nodes,
-			CurrentURL:     "https://" + r.Host,
-			ClientIP:       s.clientIP(r),
-			HasIPv6:        s.cfg.IPv6 != "",
-			Year:           time.Now().Year(),
-			Lang:           string(lang),
-			LogoChar:       s.cfg.LogoChar(),
-			LogoSrc:        s.cfg.LogoSrc(),
-			FaviconSrc:     s.cfg.FaviconSrc(),
-			I18N:           i18n.Map(lang),
-		}
+	s.renderIndex(w, r, "")
+}
+
+// handleTool renders the index page with the tool identified by slug already
+// selected. The slug is already validated by the route registration, so we
+// only need to reject paths with a trailing segment (e.g. /tools/ping/extra).
+func (s *Server) handleTool(w http.ResponseWriter, r *http.Request, slug string) {
+	// Defense in depth: the registration only ever invokes us for known
+	// slugs, but if someone routes here manually we still validate.
+	if !isValidToolSlug(slug) {
+		http.NotFound(w, r)
+		return
+	}
+	s.renderIndex(w, r, slug)
+}
+
+// renderIndex executes the page template with shared fields. initialTool is
+// passed through to the frontend as the active tool on first paint; pass "" to
+// let the client fall back to its default (Ping).
+func (s *Server) renderIndex(w http.ResponseWriter, r *http.Request, initialTool string) {
+	lang := i18n.DetectLang(r, i18n.Lang(s.cfg.DefaultLang))
+	d := pageData{
+		SiteName:       s.cfg.SiteName,
+		SiteURL:        s.cfg.SiteURL,
+		ServerLocation: s.cfg.ServerLocation,
+		IPv4:           s.cfg.IPv4,
+		IPv6:           s.cfg.IPv6,
+		Nodes:          s.cfg.Nodes,
+		CurrentURL:     "https://" + r.Host,
+		ClientIP:       s.clientIP(r),
+		HasIPv6:        s.cfg.IPv6 != "",
+		Year:           time.Now().Year(),
+		Lang:           string(lang),
+		LogoChar:       s.cfg.LogoChar(),
+		LogoSrc:        s.cfg.LogoSrc(),
+		FaviconSrc:     s.cfg.FaviconSrc(),
+		I18N:           i18n.Map(lang),
+		InitialTool:    initialTool,
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := s.tpl.Execute(w, d); err != nil {
 		log.Printf("template error: %v", err)
 	}
+}
+
+func isValidToolSlug(slug string) bool {
+	for _, v := range validToolSlugs {
+		if v == slug {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) handleInfo(w http.ResponseWriter, r *http.Request) {
@@ -262,7 +321,6 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func sseEscape(s string) string {
 	return strings.ReplaceAll(s, "\n", "\\n")
 }
@@ -289,14 +347,14 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 
 	var cats []unlockCat
 	var curCat *unlockCat
-		var curSvcs = make([]unlockSvc, 0)
+	var curSvcs = make([]unlockSvc, 0)
 
 	// Skip non-category lines: project info, IP details, interactive prompts
 	skipRe := regexp.MustCompile(`^\[ ?[0-9]+\]|项目地址|使用方式|地区：|请选择|检测项目|取消检测|回车确认|检测完毕|当天运行|Made with|已经是最新版本|^\d+\.\d+\.\d+\.\d+$`)
 	// IP info line: "IPv4 地址：..." or "ISP：..."
 	infoRe := regexp.MustCompile(`^(IPv4|IPv6) 地址：|^ISP：|^地区：`)
 	// Progress: "正在测试..."
-	progRe := regexp.MustCompile(`正在测试|^\s*$`) 
+	progRe := regexp.MustCompile(`正在测试|^\s*$`)
 
 	// Category header pattern: [ XXX (IPv4) ] or [ XX ]
 	catRe := regexp.MustCompile(`^\[ (.+?) \(IPv4\) \]|^\[ (.+?) \]`)
@@ -374,7 +432,6 @@ func catI18nKey(name string) string {
 	}
 	return name
 }
-
 
 type unlockSvc struct {
 	Name   string `json:"name"`
@@ -489,7 +546,7 @@ func (s *Server) runTraceJSON(ctx context.Context, host string) ([]byte, error) 
 	if i := strings.Index(out, "{"); i >= 0 {
 		return []byte(out[i:]), nil
 	}
-		return nil, fmt.Errorf("no JSON output from nexttrace")
+	return nil, fmt.Errorf("no JSON output from nexttrace")
 }
 
 // handleUnlock runs the MediaUnlockTest CLI binary and returns parsed JSON.

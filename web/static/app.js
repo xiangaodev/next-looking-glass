@@ -42,7 +42,46 @@
 
   const TRACE_CMDS = new Set(["traceroute", "traceroute6", "mtr", "mtr6"]);
 
-  /* node navigation */
+  /* ---------- per-tool URL routing ----------
+   * Each tool has a permanent /tools/{slug} URL so it can be linked, bookmarked
+   * and shared. Switching tools via the sidebar updates history.pushState; the
+   * popstate handler keeps the UI in sync with browser back/forward.
+   * The server emits the initial tool via <body data-initial-tool> so deep
+   * links land directly on the right panel. */
+  const VALID_SLUGS = new Set([
+    "ping", "traceroute", "mtr", "host",
+    "ping6", "traceroute6", "mtr6",
+    "speedtest", "fasttrace", "unlock",
+  ]);
+
+  function slugFromPath(path) {
+    if (!path.startsWith("/tools/")) return null;
+    const slug = path.slice("/tools/".length);
+    // Reject empty, nested, or non-canonical paths; serve 404-equivalent.
+    if (!slug || slug.includes("/")) return null;
+    return VALID_SLUGS.has(slug) ? slug : null;
+  }
+
+  function currentSlugFromURL() {
+    return slugFromPath(location.pathname);
+  }
+
+  /* Switch to a tool programmatically: highlight sidebar, run switchPanel,
+   * and push a history entry unless we're already on that URL. */
+  function activateTool(tool, opts) {
+    const push = !opts || opts.push !== false;
+    $$(".tool-btn").forEach((b) => b.classList.toggle("active", b.dataset.tool === tool));
+    currentTool = tool;
+    switchPanel(tool);
+    if (push) {
+      const target = "/tools/" + tool;
+      if (location.pathname !== target) {
+        history.pushState({ tool }, "", target);
+      }
+    }
+  }
+
+  /* ---------- node navigation ---------- */
   $("#nodeSelect").addEventListener("change", (e) => {
     if (e.target.value) location.href = e.target.value;
   });
@@ -51,11 +90,14 @@
 
   $$(".tool-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      $$(".tool-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentTool = btn.dataset.tool;
-      switchPanel(currentTool);
+      activateTool(btn.dataset.tool);
     });
+  });
+
+  /* Sync UI with browser back/forward without reloading. */
+  window.addEventListener("popstate", () => {
+    const slug = currentSlugFromURL();
+    if (slug && slug !== currentTool) activateTool(slug, { push: false });
   });
 
   function switchPanel(tool) {
@@ -645,4 +687,23 @@
   }
 
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+  /* ---------- initial route activation ----------
+   * Runs once after the IIFE has wired up all event listeners. The server
+   * tells us which tool the user landed on via <body data-initial-tool>; if
+   * absent we honour the URL pathname (sidebar-driven state would not be
+   * present yet on a fresh load). */
+  (function initFromURL() {
+    const fromBody = (document.body && document.body.dataset.initialTool) || "";
+    const initial = (fromBody && VALID_SLUGS.has(fromBody)) ? fromBody : (currentSlugFromURL() || "");
+    if (initial && initial !== currentTool) {
+      activateTool(initial, { push: false });
+    }
+    // Prefill the diagnostic target input from ?target= for direct links
+    // like /tools/ping?target=8.8.8.8. Other tools (speedtest/fasttrace/
+    // unlock) ignore the input entirely, so this is harmless if they ever
+    // receive such a query.
+    const target = new URLSearchParams(location.search).get("target");
+    if (target) targetInput.value = target;
+  })();
 })();
