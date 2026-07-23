@@ -36,13 +36,14 @@ ansible-playbook -i production/hosts site.yml --limit lg-tw-g.nimbus.com.tw
 ## playbook 做的事
 
 1. 装系统依赖（`iputils-ping` / `dnsutils` / `curl`）
-2. 装 **nexttrace** 到 `/usr/local/bin/nexttrace`
-3. 上传 Go 二进制到 `/usr/local/bin/next-looking-glass`
-4. 复制对应节点的 `config.yaml` 到 `/etc/next-looking-glass/config.yaml`
-5. 创建 systemd 服务（`next-looking-glass.service`）
-6. 启用 Apache `mod_proxy` + `mod_proxy_http`
-7. 配置 Apache `ProxyPass / http://127.0.0.1:8080/`（反代）
-8. 重启 Apache 并验证后端响应
+2. 装 **nexttrace** 到 `/usr/local/bin/nexttrace`（路由追踪 + 地理位置）
+3. 装 **unlock-test** 到 `/usr/local/bin/unlock-test`（串流解锁检测，`/api/unlock` 会 shell-out 调用它）
+4. 上传 Go 二进制到 `/usr/local/bin/next-looking-glass`
+5. 复制对应节点的 `config.yaml` 到 `/etc/next-looking-glass/config.yaml`
+6. 创建 systemd 服务（`next-looking-glass.service`）
+7. 启用 Apache `mod_proxy` + `mod_proxy_http`
+8. 配置 Apache `ProxyPass / http://127.0.0.1:8080/`（反代）
+9. 重启 Apache 并验证后端响应
 
 ## 验证
 

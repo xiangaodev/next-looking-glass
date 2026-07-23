@@ -12,6 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/next-lo
 # ---- runtime stage ----
 FROM alpine:3.21
 ARG NEXTTRACE_VERSION=v1.7.1
+ARG UNLOCK_TEST_VERSION=latest
 RUN apk add --no-cache \
       iputils \
       bind-tools \
@@ -19,10 +20,19 @@ RUN apk add --no-cache \
       curl \
     && adduser -D -H -u 10001 lg \
     && arch=$(uname -m) \
-    && case "$arch" in x86_64) nt=amd64 ;; aarch64) nt=arm64 ;; *) echo "unsupported arch: $arch"; exit 1 ;; esac \
-    && curl -fsSL "https://github.com/nxtrace/NTrace-core/releases/download/${NEXTTRACE_VERSION}/nexttrace_linux_${nt}" \
+    && case "$arch" in \
+         x86_64)  arch_=amd64 ;; \
+         aarch64) arch_=arm64 ;; \
+         *) echo "unsupported arch: $arch"; exit 1 ;; \
+       esac \
+    # nexttrace — routing + geo data
+    && curl -fsSL "https://github.com/nxtrace/NTrace-core/releases/download/${NEXTTRACE_VERSION}/nexttrace_linux_${arch_}" \
          -o /usr/local/bin/nexttrace \
-    && chmod +x /usr/local/bin/nexttrace
+    && chmod +x /usr/local/bin/nexttrace \
+    # unlock-test — streaming-region checks (shelled out from /api/unlock)
+    && curl -fsSL "https://github.com/HsukqiLee/MediaUnlockTest/releases/${UNLOCK_TEST_VERSION}/download/unlock-test_linux_${arch_}" \
+         -o /usr/local/bin/unlock-test \
+    && chmod +x /usr/local/bin/unlock-test
 WORKDIR /app
 COPY --from=build /out/next-looking-glass /app/next-looking-glass
 # nexttrace needs raw sockets; run as root in container (or use cap-add NET_RAW).

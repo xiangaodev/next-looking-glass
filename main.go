@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	core "MediaUnlockTest/pkg/core"
 	"github.com/xiangaodev/next-looking-glass/internal/config"
 	"github.com/xiangaodev/next-looking-glass/internal/server"
 )
@@ -33,9 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
-
-	// Initialize MediaUnlockTest HTTP clients once at startup (matching CLI behavior).
-	core.InitClients()
 
 	tpl, err := template.ParseFS(tplFS, "web/templates/index.html")
 	if err != nil {

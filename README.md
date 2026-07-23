@@ -26,7 +26,7 @@
 
 ### 前置需求
 
-伺服器需安裝系統指令與 **nexttrace**（路由追蹤）：
+伺服器需安裝系統指令、**nexttrace**（路由追蹤）以及 **unlock-test**（串流解鎖檢測；`/api/unlock` 會 shell-out 呼叫它）：
 
 ```bash
 # Debian / Ubuntu
@@ -39,9 +39,14 @@ dnf install -y iputils bind-utils curl
 curl -fsSL -o /usr/local/bin/nexttrace \
   https://github.com/nxtrace/NTrace-core/releases/download/v1.7.1/nexttrace_linux_amd64
 chmod +x /usr/local/bin/nexttrace
+
+# unlock-test（串流解鎖 — 由 MediaUnlockTest 提供的獨立 CLI 二進位）
+curl -fsSL -o /usr/local/bin/unlock-test \
+  https://github.com/HsukqiLee/MediaUnlockTest/releases/latest/download/unlock-test_linux_amd64
+chmod +x /usr/local/bin/unlock-test
 ```
 
-> 也可以直接用 Ansible 一鍵部署所有節點，見 `deploy/README.md`。
+> 也可以直接用 Ansible 一鍵部署所有節點，見 `deploy/README.md`（playbook 會自動下載 nexttrace 與 unlock-test）。
 
 ### 本機開發
 

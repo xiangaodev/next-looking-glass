@@ -12,6 +12,7 @@
   become: true
   vars:
     nt_version: "v1.7.1"
+    ut_version: "latest"
     lg_binary: "next-looking-glass-linux-amd64"
     lg_bin: "/usr/local/bin/next-looking-glass"
     lg_config_dir: "/etc/next-looking-glass"
@@ -49,6 +50,17 @@
         url: "https://github.com/nxtrace/NTrace-core/releases/download/{{ nt_version }}/nexttrace_linux_{{ nt_arch }}"
         dest: "/usr/local/bin/nexttrace"
         mode: "0755"
+
+    # ---- unlock-test ----
+    # Streaming-region check; shelled out from /api/unlock. Must be on PATH
+    # the systemd unit runs as. Latest release tracks the upstream Go package
+    # the previous in-process integration depended on.
+    - name: Download unlock-test
+      get_url:
+        url: "https://github.com/HsukqiLee/MediaUnlockTest/releases/{{ ut_version }}/download/unlock-test_linux_{{ nt_arch }}"
+        dest: "/usr/local/bin/unlock-test"
+        mode: "0755"
+        force: true
 
     # ---- Go 二进制 ----
     - name: Create config directory
