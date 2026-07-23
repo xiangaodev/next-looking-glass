@@ -376,7 +376,10 @@ func parseUnlockCLI(raw string, lang i18n.Lang) *unlockCLIResult {
 			if name == "" {
 				name = m[2]
 			}
-			curCat = &unlockCat{Name: i18n.T(lang, catI18nKey(name))}
+			curCat = &unlockCat{
+				Key:  catI18nKey(name),
+				Name: i18n.T(lang, catI18nKey(name)),
+			}
 			curSvcs = make([]unlockSvc, 0)
 			continue
 		}
@@ -429,6 +432,35 @@ func catI18nKey(name string) string {
 		return "cat_oceania"
 	case strings.EqualFold(name, "AI") || strings.Contains(name, "ＡＩ"):
 		return "cat_ai"
+	// 国家代码（MediaUnlockTest 1.9+ 把欧洲/东南亚按国家细分）
+	case name == "GB" || name == "UK" || strings.Contains(name, "英国") || strings.Contains(name, "英國"):
+		return "cat_gb"
+	case name == "FR" || strings.Contains(name, "法国") || strings.Contains(name, "法國"):
+		return "cat_fr"
+	case name == "DE" || strings.EqualFold(name, "Germany") || strings.Contains(name, "德国") || strings.Contains(name, "德國"):
+		return "cat_de"
+	case name == "NL" || strings.EqualFold(name, "Netherlands") || strings.Contains(name, "荷兰") || strings.Contains(name, "荷蘭"):
+		return "cat_nl"
+	case name == "ES" || strings.EqualFold(name, "Spain") || strings.Contains(name, "西班牙"):
+		return "cat_es"
+	case name == "IT" || strings.EqualFold(name, "Italy") || strings.Contains(name, "意大利"):
+		return "cat_it"
+	case name == "CH" || strings.EqualFold(name, "Switzerland") || strings.Contains(name, "瑞士"):
+		return "cat_ch"
+	case name == "RU" || strings.EqualFold(name, "Russia") || strings.Contains(name, "俄罗斯") || strings.Contains(name, "俄羅斯"):
+		return "cat_ru"
+	case name == "SG" || strings.EqualFold(name, "Singapore") || strings.Contains(name, "新加坡"):
+		return "cat_sg"
+	case name == "TH" || strings.EqualFold(name, "Thailand") || strings.Contains(name, "泰国") || strings.Contains(name, "泰國"):
+		return "cat_th"
+	case name == "ID" || strings.EqualFold(name, "Indonesia") || strings.Contains(name, "印尼") || strings.Contains(name, "印度尼西亚"):
+		return "cat_id"
+	case name == "VN" || strings.EqualFold(name, "Vietnam") || strings.Contains(name, "越南"):
+		return "cat_vn"
+	case name == "MY" || strings.EqualFold(name, "Malaysia") || strings.Contains(name, "马来西亚") || strings.Contains(name, "馬來西亞"):
+		return "cat_my"
+	case name == "IN" || strings.EqualFold(name, "India") || strings.Contains(name, "印度"):
+		return "cat_in"
 	}
 	return name
 }
@@ -440,6 +472,7 @@ type unlockSvc struct {
 	Info   string `json:"info"`
 }
 type unlockCat struct {
+	Key      string      `json:"key"` // raw i18n key (cat_global, cat_taiwan, ...), stable anchor id
 	Name     string      `json:"category"`
 	Services []unlockSvc `json:"services"`
 }

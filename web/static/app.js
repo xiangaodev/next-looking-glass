@@ -470,6 +470,7 @@
   $("#unlockBtn").addEventListener("click", async () => {
     const btn = $("#unlockBtn"), grid = $("#unlockGrid");
     btn.disabled = true;
+    resetCatnav();
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--ink-3)">${i18n("unlock_loading")}</div>`;
 
     try {
@@ -493,6 +494,7 @@
     for (const cat of (data.categories || [])) {
       const catDiv = document.createElement("div");
       catDiv.className = "unlock-cat";
+      if (cat.key) catDiv.id = "cat-" + cat.key;
       catDiv.textContent = cat.category + " · " + i18n("unlock_items", cat.services.length);
       grid.appendChild(catDiv);
 
@@ -505,11 +507,166 @@
       }
     }
 
-    const footer = document.createElement("div");
-    footer.style.cssText = "grid-column:1/-1;font-size:12px;color:var(--ink-3);margin-top:16px;text-align:center";
-    footer.textContent = i18n("unlock_footer", data.ipv4 || "-", data.isp || "-");
-    grid.appendChild(footer);
+    renderCatnav(data);
   }
+
+  /* ---------- unlock category nav ---------- */
+
+  let catnavObserver = null;
+  let catnavUserSelected = false;
+  let catnavUserTimer = null;
+
+  function resetCatnav() {
+    if (catnavObserver) { catnavObserver.disconnect(); catnavObserver = null; }
+    catnavUserSelected = false;
+    if (catnavUserTimer) { clearTimeout(catnavUserTimer); catnavUserTimer = null; }
+    const wrap = $("#unlockCatNav");
+    if (!wrap) return;
+    wrap.hidden = true;
+    const menu = $("#unlockCatNavMenu");
+    if (menu) menu.innerHTML = "";
+    closeCatnav();
+  }
+
+  function renderCatnav(data) {
+    const wrap = $("#unlockCatNav");
+    const menu = $("#unlockCatNavMenu");
+    if (!wrap || !menu) return;
+
+    menu.innerHTML = "";
+    menu.appendChild(makeCatnavItem("", i18n("unlock_nav_all")));
+    for (const cat of (data.categories || [])) {
+      if (!cat.key) continue;
+      menu.appendChild(makeCatnavItem(cat.key, cat.category));
+    }
+
+    setActiveCatnav("");
+    wrap.hidden = false;
+    // ensure menu starts collapsed (template has hidden attr, but be defensive)
+    closeCatnav();
+
+    startCatnavSpy();
+  }
+
+  function makeCatnavItem(key, label) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "unlock-catnav-item";
+    b.dataset.key = key;
+    b.setAttribute("role", "option");
+    b.innerHTML = `<span>${escapeHtml(label)}</span>` +
+      `<svg class="unlock-catnav-check" viewBox="0 0 14 14" aria-hidden="true">` +
+      `<path d="M2.5 7.5l3 3 6-7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `</svg>`;
+    return b;
+  }
+
+  function openCatnav() {
+    const btn = $("#unlockCatNavBtn"); if (!btn) return;
+    btn.setAttribute("aria-expanded", "true");
+    const menu = $("#unlockCatNavMenu"); if (menu) menu.hidden = false;
+  }
+  function closeCatnav() {
+    const btn = $("#unlockCatNavBtn"); if (!btn) return;
+    btn.setAttribute("aria-expanded", "false");
+    const menu = $("#unlockCatNavMenu"); if (menu) menu.hidden = true;
+  }
+  function toggleCatnav() {
+    const btn = $("#unlockCatNavBtn");
+    if (!btn) return;
+    const expanded = btn.getAttribute("aria-expanded") === "true";
+    if (expanded) closeCatnav(); else openCatnav();
+  }
+
+  function setActiveCatnav(key) {
+    const wanted = key || "";
+    const items = document.querySelectorAll(".unlock-catnav-item");
+    let activeText = null;
+    items.forEach(it => {
+      const isActive = it.dataset.key === wanted;
+      it.classList.toggle("is-active", isActive);
+      if (isActive) activeText = it.querySelector("span").textContent;
+    });
+    const label = $("#unlockCatNavLabel");
+    if (label) label.textContent = activeText || i18n("unlock_nav_all");
+  }
+
+  function selectCat(key) {
+    setActiveCatnav(key);
+    closeCatnav();
+    catnavUserSelected = true;
+    if (catnavUserTimer) clearTimeout(catnavUserTimer);
+    catnavUserTimer = setTimeout(() => { catnavUserSelected = false; }, 1500);
+
+    if (!key) {
+      // scroll to top of grid (just under the sticky nav)
+      const nav = $("#unlockCatNav");
+      if (!nav) return;
+      const top = nav.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top, behavior: "smooth" });
+      return;
+    }
+    const target = document.getElementById("cat-" + key);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function startCatnavSpy() {
+    if (catnavObserver) catnavObserver.disconnect();
+    const heads = document.querySelectorAll(".unlock-cat[id^='cat-']");
+    if (!heads.length) return;
+
+    const visible = new Set();
+    catnavObserver = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const k = (e.target.id || "").replace(/^cat-/, "");
+        if (!k) continue;
+        if (e.isIntersecting) visible.add(k); else visible.delete(k);
+      }
+      let topKey = "";
+      for (const h of heads) {
+        const k = (h.id || "").replace(/^cat-/, "");
+        if (k && visible.has(k)) { topKey = k; break; }
+      }
+      if (!catnavUserSelected) setActiveCatnav(topKey);
+    }, { rootMargin: "-64px 0px -60% 0px", threshold: 0 });
+
+    heads.forEach(h => catnavObserver.observe(h));
+  }
+
+// keep .unlock-catnav sticky top in sync with .site-header height (header can
+// resize when node-select dropdown opens, mobile wraps, etc.)
+  function syncCatnavTop() {
+    const header = document.querySelector(".site-header");
+    const nav = $("#unlockCatNav");
+    if (!header || !nav) return;
+    document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+  }
+  syncCatnavTop();
+  window.addEventListener("resize", syncCatnavTop);
+  // also re-sync shortly after load (fonts/webfonts can shift header height)
+  setTimeout(syncCatnavTop, 200);
+
+  // bind once on load (handlers survive repeated renders because resetCatnav
+  // only clears menu content, not the listener attachments)
+  document.addEventListener("click", (e) => {
+    const wrap = $("#unlockCatNav");
+    if (!wrap || wrap.hidden) return;
+    const btn = $("#unlockCatNavBtn");
+    if (btn && btn.contains(e.target)) {
+      toggleCatnav();
+      return;
+    }
+    const menu = $("#unlockCatNavMenu");
+    if (menu && menu.contains(e.target)) {
+      const item = e.target.closest(".unlock-catnav-item");
+      if (item) selectCat(item.dataset.key || "");
+      return;
+    }
+    closeCatnav();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCatnav();
+  });
 
   /* ---------- terminal helpers ---------- */
 

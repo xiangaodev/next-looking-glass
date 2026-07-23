@@ -152,6 +152,16 @@
         <p class="panel-desc">{{.T "ft_powered_by"}} <a href="https://github.com/HsukqiLee/MediaUnlockTest" target="_blank" rel="noopener">MediaUnlockTest</a> · {{.T "unlock_desc"}}</p>
         <button id="unlockBtn" class="btn-primary">{{.T "btn_unlock"}}</button>
         <p class="panel-hint">{{.T "unlock_disclaimer"}}</p>
+        <div class="unlock-catnav" id="unlockCatNav" hidden>
+          <button type="button" class="unlock-catnav-btn" id="unlockCatNavBtn"
+                  aria-haspopup="listbox" aria-expanded="false" aria-label="{{.T "unlock_nav_label"}}">
+            <span class="unlock-catnav-label" id="unlockCatNavLabel">{{.T "unlock_nav_all"}}</span>
+            <svg class="unlock-catnav-chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="unlock-catnav-menu" id="unlockCatNavMenu" role="listbox" aria-label="{{.T "unlock_nav_label"}}" hidden></div>
+        </div>
         <div class="unlock-grid" id="unlockGrid"></div>
       </div>
 

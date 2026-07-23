@@ -167,6 +167,9 @@ var zh = map[string]string{
 	"unlock_desc":  "檢測此節點對主流串流平台的地區解鎖狀態（Netflix / YouTube / Disney+ / ChatGPT 等）。全程約 30–60 秒。",
 	"unlock_disclaimer": "檢測結果僅供參考，實際情況可能因 IP 變動、平台政策等因素有所不同。",
 	"btn_unlock":   "開始檢測",
+	"unlock_nav_all":     "全部平台",
+	"unlock_nav_label":   "分類導覽",
+	"unlock_nav_open":    "打開分類選單",
 
 	// ---------- terminal ----------
 	"btn_stop":     "停止",
@@ -213,7 +216,6 @@ var zh = map[string]string{
 	// ---------- JS: unlock ----------
 	"unlock_loading":       "正在檢測串流解鎖狀態，請稍候…",
 	"unlock_items":         "%d 項",
-	"unlock_footer":        "IPv4: %s · ISP: %s",
 
 	// ---------- JS: speedtest ----------
 	"sp_acquire":         "取得測速許可…",
@@ -243,6 +245,20 @@ var zh = map[string]string{
 	"cat_sea":       "東南亞平台",
 	"cat_oceania":   "大洋洲平台",
 	"cat_ai":        "ＡＩ平台",
+	"cat_gb":        "英國",
+	"cat_fr":        "法國",
+	"cat_de":        "德國",
+	"cat_nl":        "荷蘭",
+	"cat_es":        "西班牙",
+	"cat_it":        "意大利",
+	"cat_ch":        "瑞士",
+	"cat_ru":        "俄羅斯",
+	"cat_sg":        "新加坡",
+	"cat_th":        "泰國",
+	"cat_id":        "印尼",
+	"cat_vn":        "越南",
+	"cat_my":        "馬來西亞",
+	"cat_in":        "印度",
 }
 
 var en = map[string]string{
@@ -310,6 +326,9 @@ var en = map[string]string{
 	"unlock_desc":  "Checks region-unlock status for major streaming platforms (Netflix / YouTube / Disney+ / ChatGPT etc.). Takes ~30–60 seconds.",
 	"unlock_disclaimer": "Results are for reference only. Actual availability may vary due to IP changes, platform policies, etc.",
 	"btn_unlock":   "Start Test",
+	"unlock_nav_all":     "All Platforms",
+	"unlock_nav_label":   "Categories",
+	"unlock_nav_open":    "Open category menu",
 
 	// ---------- terminal ----------
 	"btn_stop":     "Stop",
@@ -356,7 +375,6 @@ var en = map[string]string{
 	// ---------- JS: unlock ----------
 	"unlock_loading":       "Checking streaming unlock status, please wait…",
 	"unlock_items":         "%d items",
-	"unlock_footer":        "IPv4: %s · ISP: %s",
 
 	// ---------- JS: speedtest ----------
 	"sp_acquire":         "Acquiring permit…",
@@ -386,4 +404,18 @@ var en = map[string]string{
 	"cat_sea":       "Southeast Asia",
 	"cat_oceania":   "Oceania",
 	"cat_ai":        "AI",
+	"cat_gb":        "United Kingdom",
+	"cat_fr":        "France",
+	"cat_de":        "Germany",
+	"cat_nl":        "Netherlands",
+	"cat_es":        "Spain",
+	"cat_it":        "Italy",
+	"cat_ch":        "Switzerland",
+	"cat_ru":        "Russia",
+	"cat_sg":        "Singapore",
+	"cat_th":        "Thailand",
+	"cat_id":        "Indonesia",
+	"cat_vn":        "Vietnam",
+	"cat_my":        "Malaysia",
+	"cat_in":        "India",
 }
