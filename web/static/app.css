@@ -89,6 +89,10 @@ body {
 .node-select:hover { border-color: var(--primary); }
 .node-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,204,.12); }
 
+/* Language select mirrors node-select on desktop. */
+.lang-nav { display: flex; align-items: center; }
+.lang-select { min-width: 130px; padding: 8px 32px 8px 14px; }
+
 /* ---------- meta strip ---------- */
 
 /* Desktop (default): show .meta-grid (always-expanded 3-col cards); hide .meta-mobile */
@@ -583,6 +587,8 @@ body {
   .site-header { position: sticky; top: 0; }
   .node-nav { margin-left: auto; width: 100%; order: 3; }
   .node-select { width: 100%; min-width: 0; }
+  .lang-nav { margin-left: auto; width: 100%; order: 4; }
+  .lang-select { width: 100%; min-width: 0; }
 
   /* content */
   .content { padding: 16px; }

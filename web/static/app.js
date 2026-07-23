@@ -86,6 +86,16 @@
     if (e.target.value) location.href = e.target.value;
   });
 
+  /* ---------- language navigation ---------- */
+  $("#langSelect").addEventListener("change", (e) => {
+    const lang = e.target.value;
+    // 1-year cookie; backend DetectLang reads ?lang > cookie > Accept-Language
+    document.cookie = "lang=" + encodeURIComponent(lang) + ";path=/;max-age=31536000;samesite=lax";
+    const url = new URL(location.href);
+    url.searchParams.set("lang", lang);
+    location.href = url.toString();
+  });
+
   /* ---------- tool switching ---------- */
 
   $$(".tool-btn").forEach((btn) => {
@@ -599,11 +609,9 @@
     catnavUserTimer = setTimeout(() => { catnavUserSelected = false; }, 1500);
 
     if (!key) {
-      // scroll to top of grid (just under the sticky nav)
-      const nav = $("#unlockCatNav");
-      if (!nav) return;
-      const top = nav.getBoundingClientRect().top + window.scrollY - 8;
-      window.scrollTo({ top, behavior: "smooth" });
+      // "全部平台" → jump to the first category heading (reuses scroll-margin-top)
+      const target = document.getElementById("cat-cat_global");
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     const target = document.getElementById("cat-" + key);

@@ -50,7 +50,7 @@ type Config struct {
 	FastTraceTargets []FastTraceTarget `yaml:"fast_trace_targets"`
 	RateLimit        RateLimitConfig   `yaml:"rate_limit"`
 	TrustProxy       bool              `yaml:"trust_proxy"`
-	DefaultLang      string            `yaml:"default_lang"`   // "zh" or "en", default "zh"
+	DefaultLang      string            `yaml:"default_lang"`   // "zh-Hant" / "zh-Hans" / "en", default "zh-Hant"
 	LogoText         string            `yaml:"logo_text"`      // text in brand-mark, default first char of site_name
 	LogoURL          string            `yaml:"logo_url"`       // if set, replaces brand-mark with <img>
 	LogoBase64       string            `yaml:"logo_base64"`    // raw base64 image (derives data: URI)

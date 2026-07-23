@@ -35,6 +35,13 @@
         {{end}}
       </select>
     </nav>
+    <nav class="lang-nav" id="langNav" aria-label="{{.T "nav_select_lang"}}">
+      <select class="node-select lang-select" id="langSelect">
+        <option value="zh-Hant"{{if eq .Lang "zh-Hant"}} selected{{end}}>{{.T "lang_zh_hant"}}</option>
+        <option value="zh-Hans"{{if eq .Lang "zh-Hans"}} selected{{end}}>{{.T "lang_zh_hans"}}</option>
+        <option value="en"{{if eq .Lang "en"}} selected{{end}}>{{.T "lang_en"}}</option>
+      </select>
+    </nav>
   </div>
 </header>
 
