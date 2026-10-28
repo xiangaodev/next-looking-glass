@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{.SiteName}} · Looking Glass</title>
-<meta name="description" content="{{.SiteName}} — ping / traceroute / MTR / host / speed test / fast trace / unlock">
+<meta name="description" content="{{.SiteName}} — ping / traceroute / MTR / host / SSH / RDP / speed test / fast trace / unlock">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/static/app.css">
 {{if .FaviconSrc -}}
@@ -87,6 +87,8 @@
         <button class="tool-btn" data-tool="traceroute">{{.T "tool_traceroute"}}</button>
         <button class="tool-btn" data-tool="mtr">{{.T "tool_mtr"}}</button>
         <button class="tool-btn" data-tool="host">{{.T "tool_host"}}</button>
+        <button class="tool-btn" data-tool="ssh">{{.T "tool_ssh"}}</button>
+        <button class="tool-btn" data-tool="rdp">{{.T "tool_rdp"}}</button>
       </div>
       {{if .HasIPv6}}
       <div class="tool-group">

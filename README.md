@@ -11,6 +11,7 @@
 - **路由追蹤（nexttrace）** — traceroute / MTR 皆由 nexttrace 驅動，自動顯示每跳地理位置、ASN、運營商
 - **快速回程** — 一鍵檢測三大中國 ISP（上海電信/北京聯通/廣州移動）回程路由
 - **Host** — DNS 查詢
+- **SSH / RDP 檢測** — TCP 連線與延遲、SSH 版本標識、RDP 安全協商；預設 port 22 / 3389，可用 `host:port` 自訂，僅限公網目標且不嘗試登入
 - **網路測速** — speedtest.net 風格儀表盤：下載 / 上傳 / 延遲 / 抖動
 - **串流解鎖** — 檢測超過 180 項串流平台的區域解鎖狀態（Netflix / YouTube / Disney+ / ChatGPT 等）
 
@@ -95,6 +96,8 @@ lg-tw-g.nimbus.com.tw {
 | `GET /` | 首頁 |
 | `GET /api/info` | 節點資訊 JSON |
 | `GET /api/diag?cmd=ping&target=1.1.1.1` | 流式診斷輸出 |
+| `GET /api/diag?cmd=ssh&target=example.com:22` | SSH TCP / 版本握手檢測 |
+| `GET /api/diag?cmd=rdp&target=example.com:3389` | RDP TCP / 協商握手檢測 |
 | `GET /download/{10mb,100mb,1gb}` | 隨機位元組測速檔 |
 
 ## 授權

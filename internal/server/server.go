@@ -20,6 +20,7 @@ import (
 	"github.com/xiangaodev/next-looking-glass/internal/config"
 	lgexec "github.com/xiangaodev/next-looking-glass/internal/exec"
 	"github.com/xiangaodev/next-looking-glass/internal/i18n"
+	"github.com/xiangaodev/next-looking-glass/internal/probe"
 	"github.com/xiangaodev/next-looking-glass/internal/ratelimit"
 )
 
@@ -53,6 +54,8 @@ var validToolSlugs = []string{
 	"traceroute",
 	"mtr",
 	"host",
+	"ssh",
+	"rdp",
 	"ping6",
 	"traceroute6",
 	"mtr6",
@@ -254,10 +257,13 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 	cmd := r.URL.Query().Get("cmd")
 	target := r.URL.Query().Get("target")
 	ip := s.clientIP(r)
+	isProbe := probe.Supported(cmd)
 
-	if _, ok := lgexec.Lookup(cmd); !ok {
-		http.Error(w, "unknown command", http.StatusBadRequest)
-		return
+	if !isProbe {
+		if _, ok := lgexec.Lookup(cmd); !ok {
+			http.Error(w, "unknown command", http.StatusBadRequest)
+			return
+		}
 	}
 
 	ok, wait := s.lim.Allow(ip, ratelimit.Light)
@@ -271,6 +277,11 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer release()
+
+	if isProbe {
+		s.handleProtocolProbe(w, r, cmd, target)
+		return
+	}
 
 	runner, err := lgexec.Run(r.Context(), cmd, target)
 	if err != nil {
@@ -318,6 +329,22 @@ func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, template.HTMLEscapeString(line))
 		}
 		flusher.Flush()
+	}
+}
+
+func (s *Server) handleProtocolProbe(w http.ResponseWriter, r *http.Request, cmd, target string) {
+	lines, err := probe.Run(r.Context(), cmd, target)
+	if err != nil {
+		http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	h := w.Header()
+	h.Set("Content-Type", "text/plain; charset=utf-8")
+	h.Set("X-Accel-Buffering", "no")
+	h.Set("Cache-Control", "no-store")
+	fmt.Fprintf(w, "$ %s %s\n\n", cmd, target)
+	for _, line := range lines {
+		fmt.Fprintln(w, template.HTMLEscapeString(line))
 	}
 }
 

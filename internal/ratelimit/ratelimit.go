@@ -14,7 +14,7 @@ import (
 type Kind int
 
 const (
-	Light Kind = iota // ping / traceroute / mtr / host
+	Light Kind = iota // ping / traceroute / mtr / host / SSH / RDP
 	Heavy             // speedtest
 )
 

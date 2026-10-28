@@ -38,9 +38,12 @@
     mtr:        () => i18n("cmd_hint_mtr"),
     mtr6:       () => i18n("cmd_hint_mtr6"),
     host:       () => i18n("cmd_hint_host"),
+    ssh:        () => i18n("cmd_hint_ssh"),
+    rdp:        () => i18n("cmd_hint_rdp"),
   };
 
   const TRACE_CMDS = new Set(["traceroute", "traceroute6", "mtr", "mtr6"]);
+  const PROBE_CMDS = new Set(["ssh", "rdp"]);
 
   /* ---------- per-tool URL routing ----------
    * Each tool has a permanent /tools/{slug} URL so it can be linked, bookmarked
@@ -49,7 +52,7 @@
    * The server emits the initial tool via <body data-initial-tool> so deep
    * links land directly on the right panel. */
   const VALID_SLUGS = new Set([
-    "ping", "traceroute", "mtr", "host",
+    "ping", "traceroute", "mtr", "host", "ssh", "rdp",
     "ping6", "traceroute6", "mtr6",
     "speedtest", "fasttrace", "unlock",
   ]);
@@ -126,7 +129,11 @@
     if (tool === "unlock") {
       $("#unlockPanel").classList.remove("hidden");
     }
-    if (isDiag) cmdHint.textContent = i18n("cmd_hint_prefix") + CMD_HINTS[tool]();
+    if (isDiag) {
+      const hintPrefix = PROBE_CMDS.has(tool) ? i18n("probe_hint_prefix") : i18n("cmd_hint_prefix");
+      cmdHint.textContent = hintPrefix + CMD_HINTS[tool]();
+      targetInput.placeholder = i18n(PROBE_CMDS.has(tool) ? "placeholder_" + tool : "placeholder_host");
+    }
   }
 
   /* ---------- streaming diagnostics ---------- */
