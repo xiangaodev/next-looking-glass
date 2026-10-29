@@ -40,10 +40,11 @@
     host:       () => i18n("cmd_hint_host"),
     ssh:        () => i18n("cmd_hint_ssh"),
     rdp:        () => i18n("cmd_hint_rdp"),
+    tcp:        () => i18n("cmd_hint_tcp"),
   };
 
   const TRACE_CMDS = new Set(["traceroute", "traceroute6", "mtr", "mtr6"]);
-  const PROBE_CMDS = new Set(["ssh", "rdp"]);
+  const PROBE_CMDS = new Set(["ssh", "rdp", "tcp"]);
 
   /* ---------- per-tool URL routing ----------
    * Each tool has a permanent /tools/{slug} URL so it can be linked, bookmarked
@@ -52,7 +53,7 @@
    * The server emits the initial tool via <body data-initial-tool> so deep
    * links land directly on the right panel. */
   const VALID_SLUGS = new Set([
-    "ping", "traceroute", "mtr", "host", "ssh", "rdp",
+    "ping", "traceroute", "mtr", "host", "ssh", "rdp", "tcp",
     "ping6", "traceroute6", "mtr6",
     "speedtest", "fasttrace", "unlock",
   ]);

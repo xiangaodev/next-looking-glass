@@ -12,6 +12,7 @@
 - **快速回程** — 一鍵檢測三大中國 ISP（上海電信/北京聯通/廣州移動）回程路由
 - **Host** — DNS 查詢
 - **SSH / RDP 檢測** — TCP 連線與延遲、SSH 版本標識、RDP 安全協商；預設 port 22 / 3389，可用 `host:port` 自訂，僅限公網目標且不嘗試登入
+- **通用 TCP 端口探測** — 輸入 `host:port` 檢測單一公網端口是否可連線及延遲，不發送協議資料，不支援網段或端口範圍
 - **網路測速** — speedtest.net 風格儀表盤：下載 / 上傳 / 延遲 / 抖動
 - **串流解鎖** — 檢測超過 180 項串流平台的區域解鎖狀態（Netflix / YouTube / Disney+ / ChatGPT 等）
 
@@ -98,6 +99,7 @@ lg-tw-g.nimbus.com.tw {
 | `GET /api/diag?cmd=ping&target=1.1.1.1` | 流式診斷輸出 |
 | `GET /api/diag?cmd=ssh&target=example.com:22` | SSH TCP / 版本握手檢測 |
 | `GET /api/diag?cmd=rdp&target=example.com:3389` | RDP TCP / 協商握手檢測 |
+| `GET /api/diag?cmd=tcp&target=example.com:443` | 通用 TCP 端口連線檢測 |
 | `GET /download/{10mb,100mb,1gb}` | 隨機位元組測速檔 |
 
 ## 授權

@@ -29,23 +29,29 @@ var rdpNegotiationRequest = []byte{
 	0x01, 0x00, 0x08, 0x00, 0x03, 0x00, 0x00, 0x00,
 }
 
-// Supported reports whether name is a native protocol probe.
+// Supported reports whether name is a native network probe.
 func Supported(name string) bool {
-	return name == "ssh" || name == "rdp"
+	return name == "ssh" || name == "rdp" || name == "tcp"
 }
 
-// Run checks one public SSH or RDP endpoint and returns terminal output lines.
+// Run checks one public SSH, RDP, or TCP endpoint and returns terminal output lines.
 func Run(ctx context.Context, name, rawTarget string) ([]string, error) {
 	if !Supported(name) {
 		return nil, fmt.Errorf("unknown protocol probe %q", name)
 	}
-	defaultPort := 22
-	if name == "rdp" {
+	defaultPort := 0
+	switch name {
+	case "ssh":
+		defaultPort = 22
+	case "rdp":
 		defaultPort = 3389
 	}
 	host, port, err := parseTarget(rawTarget, defaultPort)
 	if err != nil {
 		return nil, err
+	}
+	if port == 0 {
+		return nil, errors.New("port is required; use host:port")
 	}
 	cleanHost, err := lgexec.ValidateTarget(host)
 	if err != nil {
@@ -66,10 +72,14 @@ func Run(ctx context.Context, name, rawTarget string) ([]string, error) {
 	conn, address, err := dialPublic(ctx, ips, port)
 	elapsed := time.Since(start)
 	if err != nil {
+		result := "Result: " + protocol + " service not confirmed"
+		if name == "tcp" {
+			result = "Result: TCP port is not reachable"
+		}
 		lines = append(lines,
 			fmt.Sprintf("TCP: connection failed after %s", formatDuration(elapsed)),
 			"Error: "+err.Error(),
-			"Result: "+protocol+" service not confirmed",
+			result,
 		)
 		return lines, nil
 	}
@@ -78,6 +88,10 @@ func Run(ctx context.Context, name, rawTarget string) ([]string, error) {
 	defer stopClose()
 
 	lines = append(lines, fmt.Sprintf("TCP: connected to %s in %s", address, formatDuration(elapsed)))
+	if name == "tcp" {
+		lines = append(lines, "Result: TCP port is reachable")
+		return lines, nil
+	}
 	if err := setHandshakeDeadline(conn, ctx); err != nil {
 		return nil, err
 	}

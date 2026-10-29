@@ -126,7 +126,7 @@ func normalize(s string) Lang {
 
 var zhHant = map[string]string{
 	// ---------- shell / layout ----------
-	"site_desc":        "Nimbus Looking Glass — ping / traceroute / MTR / host / SSH / RDP / 下載測速 / 快速回程 / 串流解鎖",
+	"site_desc":        "Nimbus Looking Glass — ping / traceroute / MTR / host / SSH / RDP / TCP / 下載測速 / 快速回程 / 串流解鎖",
 	"nav_switch_nodes": "節點切換",
 	"nav_select_tool":  "選擇工具",
 	"nav_select_lang":  "選擇語言",
@@ -154,6 +154,7 @@ var zhHant = map[string]string{
 	"tool_host":        "Host / DNS",
 	"tool_ssh":         "SSH 檢測",
 	"tool_rdp":         "RDP 檢測",
+	"tool_tcp":         "TCP 端口探測",
 	"tool_speedtest":   "網路測速",
 	"tool_fasttrace":   "快速回程",
 	"tool_unlock":      "串流解鎖",
@@ -163,6 +164,7 @@ var zhHant = map[string]string{
 	"placeholder_host": "例如：google.com 或 1.1.1.1",
 	"placeholder_ssh":  "例如：example.com 或 example.com:2222",
 	"placeholder_rdp":  "例如：example.com 或 example.com:13389",
+	"placeholder_tcp":  "例如：example.com:443（必填端口）",
 	"btn_run":          "開始測試",
 
 	// ---------- trace table headers (traceroute) ----------
@@ -215,6 +217,7 @@ var zhHant = map[string]string{
 	"cmd_hint_host":     "host",
 	"cmd_hint_ssh":      "TCP 連線 + SSH 版本握手（預設 port 22，不登入）",
 	"cmd_hint_rdp":      "TCP 連線 + RDP 協商握手（預設 port 3389，不登入）",
+	"cmd_hint_tcp":      "通用 TCP 連線探測（host:port，不做協議握手）",
 	"cmd_hint_prefix":   "指令：",
 	"probe_hint_prefix": "檢測：",
 
@@ -295,7 +298,7 @@ var zhHant = map[string]string{
 }
 
 var zhHans = map[string]string{
-	"site_desc":           "Nimbus Looking Glass — ping / traceroute / MTR / host / SSH / RDP / 下载测速 / 快速回程 / 流媒体解锁",
+	"site_desc":           "Nimbus Looking Glass — ping / traceroute / MTR / host / SSH / RDP / TCP / 下载测速 / 快速回程 / 流媒体解锁",
 	"nav_switch_nodes":    "节点切换",
 	"nav_select_tool":     "选择工具",
 	"nav_select_lang":     "选择语言",
@@ -318,6 +321,7 @@ var zhHans = map[string]string{
 	"tool_host":           "Host / DNS",
 	"tool_ssh":            "SSH 检测",
 	"tool_rdp":            "RDP 检测",
+	"tool_tcp":            "TCP 端口探测",
 	"tool_speedtest":      "网络测速",
 	"tool_fasttrace":      "快速回程",
 	"tool_unlock":         "流媒体解锁",
@@ -325,6 +329,7 @@ var zhHans = map[string]string{
 	"placeholder_host":    "例如：google.com 或 1.1.1.1",
 	"placeholder_ssh":     "例如：example.com 或 example.com:2222",
 	"placeholder_rdp":     "例如：example.com 或 example.com:13389",
+	"placeholder_tcp":     "例如：example.com:443（必填端口）",
 	"btn_run":             "开始测试",
 	"th_hop":              "跳",
 	"th_ip":               "IP / 主机名",
@@ -363,6 +368,7 @@ var zhHans = map[string]string{
 	"cmd_hint_host":       "host",
 	"cmd_hint_ssh":        "TCP 连接 + SSH 版本握手（默认端口 22，不登录）",
 	"cmd_hint_rdp":        "TCP 连接 + RDP 协商握手（默认端口 3389，不登录）",
+	"cmd_hint_tcp":        "通用 TCP 连接探测（host:port，不做协议握手）",
 	"cmd_hint_prefix":     "指令：",
 	"probe_hint_prefix":   "检测：",
 	"err_prefix":          "错误",
@@ -428,7 +434,7 @@ var zhHans = map[string]string{
 
 var en = map[string]string{
 	// ---------- shell / layout ----------
-	"site_desc":        "Nimbus Looking Glass — ping / traceroute / MTR / host / SSH / RDP / speed test / fast trace / unlock",
+	"site_desc":        "Nimbus Looking Glass — ping / traceroute / MTR / host / SSH / RDP / TCP / speed test / fast trace / unlock",
 	"nav_switch_nodes": "Switch Node",
 	"nav_select_tool":  "Select Tool",
 	"nav_select_lang":  "Language",
@@ -456,6 +462,7 @@ var en = map[string]string{
 	"tool_host":        "Host / DNS",
 	"tool_ssh":         "SSH Check",
 	"tool_rdp":         "RDP Check",
+	"tool_tcp":         "TCP Port Check",
 	"tool_speedtest":   "Speed Test",
 	"tool_fasttrace":   "Fast Trace",
 	"tool_unlock":      "Unlock Test",
@@ -465,6 +472,7 @@ var en = map[string]string{
 	"placeholder_host": "e.g. google.com or 1.1.1.1",
 	"placeholder_ssh":  "e.g. example.com or example.com:2222",
 	"placeholder_rdp":  "e.g. example.com or example.com:13389",
+	"placeholder_tcp":  "e.g. example.com:443 (port required)",
 	"btn_run":          "Run",
 
 	// ---------- trace table headers (traceroute) ----------
@@ -517,6 +525,7 @@ var en = map[string]string{
 	"cmd_hint_host":     "host",
 	"cmd_hint_ssh":      "TCP + SSH version handshake (default port 22, no login)",
 	"cmd_hint_rdp":      "TCP + RDP negotiation handshake (default port 3389, no login)",
+	"cmd_hint_tcp":      "Generic TCP connect check (host:port, no protocol handshake)",
 	"cmd_hint_prefix":   "Command: ",
 	"probe_hint_prefix": "Check: ",
 

@@ -32,7 +32,7 @@ type FastTraceTarget struct {
 
 // RateLimitConfig controls per-IP token buckets.
 type RateLimitConfig struct {
-	LightPerHour int `yaml:"light_per_hour"` // ping/traceroute/mtr/host/SSH/RDP
+	LightPerHour int `yaml:"light_per_hour"` // ping/traceroute/mtr/host/SSH/RDP/TCP
 	HeavyPerHour int `yaml:"heavy_per_hour"` // speedtest
 }
 

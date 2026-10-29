@@ -56,6 +56,7 @@ var validToolSlugs = []string{
 	"host",
 	"ssh",
 	"rdp",
+	"tcp",
 	"ping6",
 	"traceroute6",
 	"mtr6",
